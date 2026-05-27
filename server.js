@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
+const { Resend } = require("resend");
+const resend = new Resend("YOUR_RESEND_API_KEY_HERE");
 
 const app = express();
 app.use(cors());
@@ -58,7 +60,35 @@ app.get("/fetch-title", async (req, res) => {
     res.json({ title: "Unknown Product" });
   }
 });
+app.post("/send-alert", async (req, res) => {
+  const { productName, oldPrice, newPrice, url, email } = req.body;
 
+  try {
+    await resend.emails.send({
+      from: "PC Tracker <onboarding@resend.dev>",
+      to: email,
+      subject: `💰 Price Drop Alert: ${productName}`,
+      html: `
+        <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto; background:#0f0f0f; color:#e0e0e0; padding:30px; border-radius:12px;">
+          <h1 style="color:#00aaff;">💰 Price Drop Detected!</h1>
+          <p style="margin-top:16px;">Good news! A product you're tracking just dropped in price.</p>
+          <div style="background:#1a1a1a; border-radius:8px; padding:20px; margin:24px 0;">
+            <h2 style="color:#fff; font-size:1rem;">${productName}</h2>
+            <p style="margin-top:12px;">Old price: <span style="color:#888; text-decoration:line-through;">$${oldPrice}</span></p>
+            <p style="margin-top:4px;">New price: <span style="color:#00ff99; font-size:1.4rem; font-weight:bold;">$${newPrice}</span></p>
+          </div>
+          <a href="${url}" style="display:inline-block; background:#00aaff; color:#000; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold;">View Product →</a>
+          <p style="margin-top:24px; color:#555; font-size:0.8rem;">You're receiving this because you're tracking this item on PC Parts Price Tracker.</p>
+        </div>
+      `
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to send email" });
+  }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 const PORT = process.env.PORT || 3000;
