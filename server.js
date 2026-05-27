@@ -89,6 +89,22 @@ app.post("/send-alert", async (req, res) => {
     res.status(500).json({ error: "Failed to send email" });
   }
 });
+app.get("/test-email", async (req, res) => {
+  try {
+    await resend.emails.send({
+      from: "PC Tracker <onboarding@resend.dev>",
+      to: req.query.email,
+      subject: "💰 Price Drop Alert: Test",
+      html: `<h1 style="color:#00aaff;">Test alert working!</h1><p>Your price drop emails are set up correctly.</p>`
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 const PORT = process.env.PORT || 3000;
