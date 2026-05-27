@@ -34,6 +34,32 @@ app.get("/search", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+app.get("/fetch-title", async (req, res) => {
+  const url = req.query.url;
+  if (!url) return res.status(400).json({ error: "No URL provided" });
 
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+      }
+    });
+    const html = await response.text();
+    const match = html.match(/<title>(.*?)<\/title>/i);
+    const title = match 
+      ? match[1]
+          .replace(" - Amazon.com", "")
+          .replace(" | Newegg.com", "")
+          .replace(" | eBay", "")
+          .trim() 
+      : "Unknown Product";
+    res.json({ title });
+  } catch (error) {
+    res.json({ title: "Unknown Product" });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
